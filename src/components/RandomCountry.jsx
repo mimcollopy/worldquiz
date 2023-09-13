@@ -6,6 +6,15 @@ export default function RandomCountry() {
   const [capital, setCapital] = useState("");
   const [allCapitals, setAllCapitals] = useState([]);
   const [inputValue, setInputValue] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const options = ["melbourne", "sydney", "hobart"];
+
+  //some capitals have accents on characters. this will remove them and turn them into reular characters for the purpose of comparing them to check if the user has guessed the right capital
+  const normalizedCapital = (capital && capital[0])
+  ? capital[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  : "";
+
+  const normalizedInput = inputValue.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
   // this handles the user pressing the 'press for 🌍' button. Its main purpose is to handle the state of the button click.
   const handleSubmit = (e) => {
@@ -16,10 +25,10 @@ export default function RandomCountry() {
   // handles user guessing the coutries capital. negative results are only shown in browser console for now.
   const handleGuess = (e) => {
     e.preventDefault();
-    if (capital[0].toLowerCase() === inputValue.toLowerCase()) {
-      console.log(capital[0].toLowerCase());
+    if (normalizedCapital === normalizedInput) {
+
       console.log("its a match");
-      alert("you win!");
+    //   alert("you win!");
     } else {
       console.log("incorrect guess");
     }
@@ -40,7 +49,7 @@ export default function RandomCountry() {
           (countryData) => countryData.capital
         );
         setAllCapitals(capitalCities);
-        // console.log(capitalCities);
+        console.log(capitalCities);
       });
     //effect is used so this will only run once on initialization
   }, []);
@@ -101,6 +110,28 @@ export default function RandomCountry() {
             onChange={(e) => setInputValue(e.target.value)}
           />
         </label>
+{/* //new guessing form to have dropdown field */}
+        <p>new guess field:</p>
+        <div className="guess-field">
+          <input
+            type="text"
+            placeholder="guess..."
+            onChange={(event) => {
+              setSearchTerm(event.target.value);
+            }}
+          />
+          <ul id="dropDownList" class='dropdown-content'>
+
+          </ul>
+          <div className="list-group">
+            <button
+            type="button"
+            className="list-group-item">
+
+            </button>
+          </div>
+        </div>
+
         <button className="guess-button" onClick={handleGuess}>
           guess
         </button>
