@@ -7,28 +7,57 @@ export default function RandomCountry() {
   const [allCapitals, setAllCapitals] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const options = ["melbourne", "sydney", "hobart"];
+  const [filteredCapitals, setFilteredCapitals] = useState("");
+  const cities = ["melbourne", "sydney", "hobart"];
 
-  //some capitals have accents on characters. this will remove them and turn them into reular characters for the purpose of comparing them to check if the user has guessed the right capital
-  const normalizedCapital = (capital && capital[0])
-  ? capital[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-  : "";
+  const normalizedInput = inputValue
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const normalizedCapital =
+    capital && capital[0]
+      ? capital[0]
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+      : "";
 
-  const normalizedInput = inputValue.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
-  // this handles the user pressing the 'press for 🌍' button. Its main purpose is to handle the state of the button click.
+  // handle the user pressing the 'press for 🌍' button. Its main purpose is to handle the state of the button click.
   const handleSubmit = (e) => {
     e.preventDefault();
     setButtonClick(true);
+  };
+
+  const handleInputChange = (e) => {
+    const inputText = e.target.value;
+    setInputValue(inputText);
+
+    const normalizedInput = inputText
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""); // Normalize the input
+
+    const filteredItems = allCapitals.filter((city) => {
+      if (typeof city === "string") {
+        const normalizedCity = city
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, ""); // Normalize the city name
+        return normalizedCity.includes(normalizedInput);
+      }
+      return false; // Skip non-string values
+    });
+
+    setFilteredCapitals(filteredItems);
   };
 
   // handles user guessing the coutries capital. negative results are only shown in browser console for now.
   const handleGuess = (e) => {
     e.preventDefault();
     if (normalizedCapital === normalizedInput) {
-
       console.log("its a match");
-    //   alert("you win!");
+      setInputValue("")
+      //   alert("you win!");
     } else {
       console.log("incorrect guess");
     }
@@ -36,7 +65,17 @@ export default function RandomCountry() {
     // setInputValue("");
   };
 
-  //SAVE AN ARRAY OF ALL CAPITAL CITIES (array not yet being used)
+
+
+  const handleClick = (city) => {
+   
+    console.log(city)
+    setInputValue(city)
+    return
+  }
+
+
+  //SAVE AN ARRAY OF ALL CAPITAL CITIES
 
   // this creates an array of all of the capital cities in the fetch request for all coutries. This is to create a drop down list of all capital cities that the user can guess from when guessing the capital city of the country shown. This feature is not yet in use.
   useEffect(() => {
@@ -45,11 +84,15 @@ export default function RandomCountry() {
       .then((res) => res.json())
       .then((fetchedData) => {
         //map to put all capital cities into the allCapitals state
-        const capitalCities = fetchedData.map(
-          (countryData) => countryData.capital
-        );
+        const capitalCities = fetchedData
+          .map((countryData) => countryData.capital)
+          .flat()
+          .sort();
         setAllCapitals(capitalCities);
+        // const newCaps = capitalCities.flat()
         console.log(capitalCities);
+        // console.log(newCaps);
+        console.log(allCapitals);
       });
     //effect is used so this will only run once on initialization
   }, []);
@@ -98,38 +141,35 @@ export default function RandomCountry() {
       {/* display the ranom country */}
       <p className="display-country">{country}</p>
       {/* incase of a country not having a capital (Antarctica, Macau) the following line will run */}
-      {capital === undefined && <p> this country has no capital </p>}
+      {capital === undefined && (
+        <p>
+          {" "}
+          this country has no capital. Press the button to generate a new
+          country!{" "}
+        </p>
+      )}
 
       {/* form to guess capital city */}
+
       <form className="capital-form">
-        <label>
-          <input
-            className="capital-input"
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-          />
-        </label>
-{/* //new guessing form to have dropdown field */}
-        <p>new guess field:</p>
         <div className="guess-field">
+          Guess the capital of {country}:
           <input
-            type="text"
             placeholder="guess..."
-            onChange={(event) => {
-              setSearchTerm(event.target.value);
-            }}
+            value={inputValue}
+            onChange={handleInputChange}
           />
-          <ul id="dropDownList" class='dropdown-content'>
-
-          </ul>
-          <div className="list-group">
-            <button
-            type="button"
-            className="list-group-item">
-
-            </button>
-          </div>
+          {filteredCapitals.length > 0 && (
+            <div className="custom-dropdown">
+              {filteredCapitals.map((city, idx) => (
+                <div key={idx} onClick={() => handleClick(city)}>{city}</div>
+              ))}
+            </div>
+          )}
+          {/* <datalist id="cities">
+              {allCapitals.map((city, idx) => <option key={idx}>{city}</option>)}
+            </datalist> */}
+          <h1>{inputValue}</h1>
         </div>
 
         <button className="guess-button" onClick={handleGuess}>
